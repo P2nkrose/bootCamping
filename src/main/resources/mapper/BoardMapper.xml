@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bootCamping.mapper.BoardMapper">
+
+    <!--  게시판 맵퍼  -->
+    <insert id="addBoard">
+        insert into boot_camping.board (customerid, title, content, filename, filesize)
+        values (#{customerid}, #{title}, #{content}, #{filename}, #{filesize})
+    </insert>
+
+    <select id="getListBoard" resultType="com.bootCamping.domain.DTO.BoardDTO">
+        select * from boot_camping.board order by boardid desc
+    </select>
+    
+    <select id="getOneBoard" resultType="com.bootCamping.domain.DTO.BoardDTO">
+        select * from boot_camping.board where boardid = #{boardid}
+    </select>
+
+    <update id="updateBoard" >
+        update boot_camping.board set title = #{title}, content = #{content}, filename = #{filename}, filesize = #{filesize}
+                                  where boardid = #{boardid}
+    </update>
+
+
+    <delete id="deleteBoard">
+        delete from boot_camping.board where boardid = #{boardid}
+    </delete>
+
+    <select id="selectList" resultType="com.bootCamping.domain.VO.BoardVO">
+        select * from board
+        <include refid="search"></include>
+        order by boardid desc limit #{skip}, #{size}
+    </select>
+
+    <select id="getCount" resultType="int">
+        select COUNT(boardid) from board
+        <include refid="search"></include>
+    </select>
+
+    <sql id="search">
+        <where>
+            <if test="types !=null and types.length>0">
+                <foreach collection="types" item="type" open="(" close=")" separator=" OR">
+                    <if test="type == 't'.toString()">
+                        title like concat('%', #{keyword}, '%')
+                    </if>
+                    <if test="type == 'w'.toString()">
+                        customerid like concat('%', #{keyword}, '%')
+                    </if>
+                    <if test="type == 'c'.toString()">
+                        content like concat('%', #{keyword}, '%')
+                    </if>
+                </foreach>
+            </if>
+<!--            <if test="finished">-->
+<!--                <trim prefix="and">-->
+<!--                    finished = 1-->
+<!--                </trim>-->
+<!--            </if>-->
+            <if test="from != null and to != null">
+                <trim prefix="and">
+                    dueDate between #{from} and #{to}
+                </trim>
+            </if>
+        </where>
+    </sql>
+
+    <select id="rippleCount" resultType="int">
+        update board b
+        set b.ripplecount = (select count(r.rippleid) from ripple r where r.boardnum = #{boardnum})
+        where b.boardid = #{boardid}
+    </select>
+
+
+
+
+
+    <update id="updateBoardRippleCount">
+        update boot_camping.board set ripplecount = #{ripplecount} where boardid = #{boardid}
+    </update>
+
+</mapper>
